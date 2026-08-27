@@ -1,0 +1,501 @@
+<title>ガチエリア四人衆</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#F6F3EE;
+  --surface:#FFFFFF;
+  --surface-2:#FBF8F2;
+  --surface-3:#F0ECE3;
+  --border:#E4DFD3;
+  --text:#1C1A22;
+  --text-2:#5C5866;
+  --text-3:#8B8794;
+
+  --p-self:#E01A6E;
+  --p-baron:#1E88A8;
+  --p-mike:#B8860B;
+  --p-chii:#8B5CF6;
+
+  --div-bad2:#B6391E;
+  --div-bad1:#DB8B62;
+  --div-neutral:#B3AFA2;
+  --div-good1:#7EC3A8;
+  --div-good2:#178C5E;
+
+  --shadow: 0 1px 2px rgba(28,26,34,.04), 0 8px 24px -12px rgba(28,26,34,.18);
+  --radius-s: 6px;
+  --radius-m: 12px;
+  --radius-l: 20px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#131219;
+    --surface:#1C1B24;
+    --surface-2:#211F2A;
+    --surface-3:#29273360;
+    --border:#34323F;
+    --text:#F1EFF5;
+    --text-2:#B2AEBD;
+    --text-3:#807C8C;
+
+    --p-self:#F0508C;
+    --p-baron:#3AB6C9;
+    --p-mike:#D9A62E;
+    --p-chii:#A47DE8;
+
+    --div-bad2:#FF6B45;
+    --div-bad1:#C97A5C;
+    --div-neutral:#6E6B62;
+    --div-good1:#5FBF95;
+    --div-good2:#2FD991;
+
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px -12px rgba(0,0,0,.55);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#131219;
+  --surface:#1C1B24;
+  --surface-2:#211F2A;
+  --surface-3:#29273360;
+  --border:#34323F;
+  --text:#F1EFF5;
+  --text-2:#B2AEBD;
+  --text-3:#807C8C;
+
+  --p-self:#F0508C;
+  --p-baron:#3AB6C9;
+  --p-mike:#D9A62E;
+  --p-chii:#A47DE8;
+
+  --div-bad2:#FF6B45;
+  --div-bad1:#C97A5C;
+  --div-neutral:#6E6B62;
+  --div-good1:#5FBF95;
+  --div-good2:#2FD991;
+
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px -12px rgba(0,0,0,.55);
+}
+
+*{box-sizing:border-box;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Manrope',-apple-system,'Hiragino Sans','Noto Sans JP',sans-serif;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  padding:0 0 64px;
+}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px;}
+h1,h2,h3{font-family:'Unbounded','Hiragino Sans','Noto Sans JP',sans-serif;text-wrap:balance;margin:0;}
+.num{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;}
+
+a{color:inherit;}
+button{font-family:inherit;}
+:focus-visible{outline:2px solid var(--p-self);outline-offset:2px;border-radius:4px;}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.001ms !important;transition-duration:.001ms !important;}}
+
+/* ---------- hero ---------- */
+.hero{
+  position:relative;
+  padding:56px 0 40px;
+  overflow:hidden;
+  border-bottom:1px solid var(--border);
+  margin-bottom:40px;
+  background:
+    radial-gradient(520px 320px at 82% -10%, color-mix(in oklab, var(--p-self) 14%, transparent), transparent 70%),
+    radial-gradient(420px 280px at 8% 110%, color-mix(in oklab, var(--p-baron) 12%, transparent), transparent 70%);
+}
+.eyebrow{
+  font-size:.78rem;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--text-3);font-weight:700;margin-bottom:10px;
+}
+.hero h1{font-size:clamp(1.8rem,4.2vw,2.6rem);font-weight:800;color:var(--text);}
+.hero p{color:var(--text-2);max-width:56ch;margin-top:10px;font-size:.98rem;}
+
+.hero-stats{
+  display:flex;gap:14px;flex-wrap:wrap;margin-top:30px;
+}
+.stat-tile{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-l);
+  padding:18px 24px;box-shadow:var(--shadow);min-width:150px;flex:1 1 150px;
+}
+.stat-tile .n{font-size:2.1rem;font-weight:700;line-height:1;}
+.stat-tile .l{font-size:.78rem;color:var(--text-2);margin-top:8px;font-weight:600;letter-spacing:.02em;}
+.stat-tile.accent{background:color-mix(in oklab, var(--p-self) 9%, var(--surface));border-color:color-mix(in oklab, var(--p-self) 30%, var(--border));}
+.stat-tile.accent .n{color:var(--p-self);}
+
+/* ---------- roster ---------- */
+.section{margin:52px 0;}
+.section-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap;}
+.section-head h2{font-size:1.3rem;font-weight:700;}
+.section-note{color:var(--text-3);font-size:.85rem;}
+
+.roster{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;}
+.roster-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);
+  padding:18px;box-shadow:var(--shadow);
+  border-top:3px solid var(--dot);
+}
+.roster-card .who{display:flex;align-items:center;gap:8px;font-weight:700;font-size:1.02rem;}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--dot);flex:none;}
+.roster-card .wr{font-size:1.9rem;font-weight:800;margin-top:10px;font-family:'JetBrains Mono',monospace;}
+.roster-card .wl{color:var(--text-2);font-size:.82rem;margin-top:2px;}
+.roster-card .wpn{
+  margin-top:12px;font-size:.78rem;color:var(--text-2);
+  border-top:1px dashed var(--border);padding-top:10px;
+}
+.roster-card .wpn b{color:var(--text);font-weight:600;}
+
+/* ---------- bars ---------- */
+.bar-list{display:flex;flex-direction:column;gap:9px;}
+.bar-row{display:grid;grid-template-columns:minmax(110px,180px) 1fr auto;gap:12px;align-items:center;}
+.bar-row .label{font-size:.86rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bar-track{position:relative;height:22px;background:var(--surface-3);border-radius:5px;overflow:hidden;}
+.bar-fill{position:absolute;left:0;top:0;bottom:0;border-radius:5px;transition:width .5s cubic-bezier(.22,.61,.36,1);}
+.bar-mid{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--border);}
+.bar-row .figs{font-size:.78rem;color:var(--text-2);white-space:nowrap;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;min-width:150px;text-align:right;}
+.bar-row .figs strong{color:var(--text);font-size:.92rem;}
+.bar-row:hover .bar-track{outline:1px solid var(--border);}
+
+.legend-div{display:flex;align-items:center;gap:8px;font-size:.76rem;color:var(--text-3);margin-top:14px;}
+.legend-div .grad{width:120px;height:8px;border-radius:4px;background:linear-gradient(90deg,var(--div-bad2),var(--div-bad1),var(--div-neutral),var(--div-good1),var(--div-good2));}
+
+/* ---------- weapon tabs ---------- */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;}
+.tab-btn{
+  padding:8px 16px;border-radius:999px;border:1px solid var(--border);background:var(--surface);
+  color:var(--text-2);font-weight:700;font-size:.84rem;cursor:pointer;display:flex;align-items:center;gap:7px;
+  transition:background .15s, color .15s, border-color .15s;
+}
+.tab-btn .dot{width:8px;height:8px;}
+.tab-btn[aria-selected="true"]{background:var(--tabc);border-color:var(--tabc);color:#fff;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+.wtable-wrap{overflow-x:auto;margin-top:22px;border:1px solid var(--border);border-radius:var(--radius-m);background:var(--surface);}
+table.wtable{width:100%;border-collapse:collapse;font-size:.84rem;min-width:480px;}
+table.wtable th{
+  text-align:left;padding:10px 14px;background:var(--surface-2);color:var(--text-3);
+  font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;font-weight:700;border-bottom:1px solid var(--border);
+  position:sticky;top:0;
+}
+table.wtable td{padding:9px 14px;border-bottom:1px solid var(--border);}
+table.wtable tbody tr:last-child td{border-bottom:none;}
+table.wtable td.num,table.wtable th.num{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;text-align:right;}
+table.wtable tbody tr:hover{background:var(--surface-2);}
+.wr-chip{
+  display:inline-block;padding:2px 8px;border-radius:999px;font-weight:700;font-size:.78rem;
+  font-family:'JetBrains Mono',monospace;color:#fff;
+}
+
+/* ---------- monthly chart ---------- */
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);padding:24px 20px 16px;box-shadow:var(--shadow);}
+#monthly-svg{width:100%;height:auto;overflow:visible;}
+.mo-line{fill:none;stroke:var(--p-self);stroke-width:2.5;}
+.mo-area{fill:url(#moGrad);}
+.mo-dot{fill:var(--surface);stroke:var(--p-self);stroke-width:2.5;cursor:pointer;}
+.mo-dot.hi{fill:var(--p-self);}
+.mo-mid{stroke:var(--border);stroke-width:1;stroke-dasharray:3 3;}
+.mo-axis-label{fill:var(--text-3);font-size:9.5px;font-family:'JetBrains Mono',monospace;}
+.mo-gap{fill:var(--text-3);font-size:9.5px;font-style:italic;}
+
+.tooltip{
+  position:fixed;pointer-events:none;background:var(--text);color:var(--bg);
+  padding:8px 11px;border-radius:8px;font-size:.78rem;line-height:1.45;box-shadow:var(--shadow);
+  z-index:50;opacity:0;transform:translateY(4px);transition:opacity .1s, transform .1s;
+  font-family:'JetBrains Mono',monospace;white-space:nowrap;
+}
+.tooltip.show{opacity:1;transform:translateY(0);}
+
+.callout{
+  background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-m);
+  padding:16px 18px;font-size:.86rem;color:var(--text-2);margin-top:16px;
+}
+.callout b{color:var(--text);}
+
+footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--border);color:var(--text-3);font-size:.78rem;}
+footer p{margin:4px 0;}
+</style>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Splatoon 3 &middot; Squad Battle Log</div>
+    <h1>ガチエリア × プライベートマッチ<br>スタッツ</h1>
+    <p>みけねこ・baron・ちいがわのいずれかとチームを組んだ試合を、ルール=ガチエリア／ロビー=プライベートマッチに絞って集計。武器構成とステージ相性の偏りを見るためのログです。</p>
+    <div class="hero-stats" id="hero-stats"></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section class="section">
+    <div class="section-head">
+      <h2>スクワッド</h2>
+      <span class="section-note">この521戦の中でそれぞれ何試合出ているか</span>
+    </div>
+    <div class="roster" id="roster"></div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>誰と組んだか</h2>
+      <span class="section-note">組み合わせ別の試合数と勝率</span>
+    </div>
+    <div class="bar-list" id="combo-bars"></div>
+    <div class="legend-div"><span class="grad"></span><span>苦戦(0%) &larr; 50% &rarr; 好調(100%)</span></div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>武器別</h2>
+      <span class="section-note">プレイヤーを切り替えて表示 &middot; n=試合数</span>
+    </div>
+    <div class="tabs" id="wtabs"></div>
+    <div id="wpanels"></div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>ステージ別</h2>
+      <span class="section-note">勝率順 &middot; 全25ステージ</span>
+    </div>
+    <div class="bar-list" id="stage-bars"></div>
+    <div class="legend-div"><span class="grad"></span><span>苦戦(0%) &larr; 50% &rarr; 好調(100%)</span></div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>月別の推移</h2>
+      <span class="section-note">点にカーソルを合わせると詳細</span>
+    </div>
+    <div class="chart-card">
+      <svg id="monthly-svg" viewBox="0 0 960 260"></svg>
+    </div>
+    <div class="callout">
+      2024年12月〜2026年7月はデータが存在しません。<b>戦績自体はプレイしていても、その期間分をアップロードしていなかったための欠落</b>で、実際にプレイを休止していたとは限りません。
+    </div>
+  </section>
+
+  <footer>
+    <p>集計対象: ガチエリア &times; プライベートマッチ &times;(みけねこ / baron / ちいがわ のいずれかと同チーム) = 521戦。引き分け8戦を含む。勝率は勝/(勝+負)で算出、引き分けは分母から除外。</p>
+    <p>n(試合数)が一桁の項目は参考値。特に「3人全員 &times; プライベート」は8戦のみで、傾向として断定はできません。</p>
+    <p>データソース: stat.ink 戦績エクスポート(splatoon3-battles/stat-ink-history-vs.json)。</p>
+  </footer>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script id="data" type="application/json">{"overall": {"n": 521, "w": 254, "l": 259, "d": 8, "wr": 49.5}, "combos": [{"label": "baron + みけねこ", "n": 309, "w": 140, "l": 167, "d": 2, "wr": 45.6}, {"label": "baron", "n": 128, "w": 71, "l": 55, "d": 2, "wr": 56.3}, {"label": "みけねこ", "n": 76, "w": 43, "l": 29, "d": 4, "wr": 59.7}, {"label": "baron + ちいがわ + みけねこ", "n": 8, "w": 0, "l": 8, "d": 0, "wr": 0.0}], "stages": [{"label": "マテガイ放水路", "n": 33, "w": 15, "l": 17, "d": 1, "wr": 46.9}, {"label": "チョウザメ造船", "n": 31, "w": 12, "l": 17, "d": 2, "wr": 41.4}, {"label": "キンメダイ美術館", "n": 30, "w": 18, "l": 12, "d": 0, "wr": 60.0}, {"label": "マヒマヒリゾート＆スパ", "n": 29, "w": 13, "l": 14, "d": 2, "wr": 48.1}, {"label": "ユノハナ大渓谷", "n": 26, "w": 11, "l": 15, "d": 0, "wr": 42.3}, {"label": "ナメロウ金属", "n": 25, "w": 15, "l": 9, "d": 1, "wr": 62.5}, {"label": "タラポートショッピングパーク", "n": 24, "w": 11, "l": 12, "d": 1, "wr": 47.8}, {"label": "マンタマリア号", "n": 24, "w": 15, "l": 9, "d": 0, "wr": 62.5}, {"label": "マサバ海峡大橋", "n": 24, "w": 15, "l": 9, "d": 0, "wr": 62.5}, {"label": "ナンプラー遺跡", "n": 24, "w": 7, "l": 17, "d": 0, "wr": 29.2}, {"label": "ゴンズイ地区", "n": 24, "w": 8, "l": 16, "d": 0, "wr": 33.3}, {"label": "海女美術大学", "n": 24, "w": 7, "l": 17, "d": 0, "wr": 29.2}, {"label": "コンブトラック", "n": 23, "w": 11, "l": 12, "d": 0, "wr": 47.8}, {"label": "タカアシ経済特区", "n": 22, "w": 13, "l": 9, "d": 0, "wr": 59.1}, {"label": "クサヤ温泉", "n": 21, "w": 13, "l": 7, "d": 1, "wr": 65.0}, {"label": "ヤガラ市場", "n": 21, "w": 14, "l": 7, "d": 0, "wr": 66.7}, {"label": "スメーシーワールド", "n": 19, "w": 14, "l": 5, "d": 0, "wr": 73.7}, {"label": "ザトウマーケット", "n": 18, "w": 7, "l": 11, "d": 0, "wr": 38.9}, {"label": "ネギトロ炭鉱", "n": 17, "w": 10, "l": 7, "d": 0, "wr": 58.8}, {"label": "オヒョウ海運", "n": 16, "w": 7, "l": 9, "d": 0, "wr": 43.8}, {"label": "カジキ空港", "n": 15, "w": 9, "l": 6, "d": 0, "wr": 60.0}, {"label": "ヒラメが丘団地", "n": 14, "w": 4, "l": 10, "d": 0, "wr": 28.6}, {"label": "バイガイ亭", "n": 10, "w": 4, "l": 6, "d": 0, "wr": 40.0}, {"label": "リュウグウターミナル", "n": 5, "w": 1, "l": 4, "d": 0, "wr": 20.0}, {"label": "デカライン高架下", "n": 2, "w": 0, "l": 2, "d": 0, "wr": 0.0}], "weapons": {"self": [{"label": "ケルビン525", "n": 185, "w": 92, "l": 88, "d": 5, "wr": 51.1}, {"label": "スプラマニューバー", "n": 142, "w": 73, "l": 67, "d": 2, "wr": 52.1}, {"label": ".52ガロン", "n": 43, "w": 19, "l": 24, "d": 0, "wr": 44.2}, {"label": "ケルビン525デコ", "n": 38, "w": 15, "l": 23, "d": 0, "wr": 39.5}, {"label": "クアッドホッパーブラック", "n": 26, "w": 10, "l": 16, "d": 0, "wr": 38.5}, {"label": "N-ZAP85", "n": 22, "w": 10, "l": 12, "d": 0, "wr": 45.5}, {"label": "わかばシューター", "n": 12, "w": 6, "l": 6, "d": 0, "wr": 50.0}, {"label": "シャープマーカー", "n": 11, "w": 3, "l": 7, "d": 1, "wr": 30.0}, {"label": "ヴァリアブルローラー", "n": 6, "w": 6, "l": 0, "d": 0, "wr": 100.0}, {"label": "ヒッセン・ヒュー", "n": 4, "w": 2, "l": 2, "d": 0, "wr": 50.0}, {"label": "スクリュースロッシャー", "n": 4, "w": 4, "l": 0, "d": 0, "wr": 100.0}, {"label": "クラッシュブラスター", "n": 3, "w": 2, "l": 1, "d": 0, "wr": 66.7}, {"label": "スパッタリー・ヒュー", "n": 3, "w": 2, "l": 1, "d": 0, "wr": 66.7}, {"label": "プライムシューターコラボ", "n": 2, "w": 1, "l": 1, "d": 0, "wr": 50.0}, {"label": "デュアルスイーパー", "n": 2, "w": 0, "l": 2, "d": 0, "wr": 0.0}, {"label": ".96ガロンデコ", "n": 2, "w": 1, "l": 1, "d": 0, "wr": 50.0}, {"label": "バケットスロッシャー", "n": 2, "w": 1, "l": 1, "d": 0, "wr": 50.0}, {"label": "スプラシューター", "n": 2, "w": 1, "l": 1, "d": 0, "wr": 50.0}, {"label": "スパッタリー", "n": 2, "w": 0, "l": 2, "d": 0, "wr": 0.0}, {"label": "ホットブラスター", "n": 2, "w": 2, "l": 0, "d": 0, "wr": 100.0}, {"label": "バレルスピナー", "n": 2, "w": 2, "l": 0, "d": 0, "wr": 100.0}, {"label": "デュアルスイーパーカスタム", "n": 1, "w": 0, "l": 1, "d": 0, "wr": 0.0}, {"label": "デンタルワイパースミ", "n": 1, "w": 0, "l": 1, "d": 0, "wr": 0.0}, {"label": "ノヴァブラスター", "n": 1, "w": 1, "l": 0, "d": 0, "wr": 100.0}, {"label": "ボールドマーカー", "n": 1, "w": 0, "l": 1, "d": 0, "wr": 0.0}, {"label": "ドライブワイパー", "n": 1, "w": 0, "l": 1, "d": 0, "wr": 0.0}, {"label": "エクスプロッシャー", "n": 1, "w": 1, "l": 0, "d": 0, "wr": 100.0}], "みけねこ": [{"label": "ジムワイパー", "n": 139, "w": 80, "l": 55, "d": 4, "wr": 59.3}, {"label": "ジムワイパー・ヒュー", "n": 126, "w": 50, "l": 75, "d": 1, "wr": 40.0}, {"label": "デンタルワイパーミント", "n": 33, "w": 18, "l": 15, "d": 0, "wr": 54.5}, {"label": "デンタルワイパースミ", "n": 21, "w": 8, "l": 13, "d": 0, "wr": 38.1}, {"label": ".96ガロン", "n": 19, "w": 6, "l": 13, "d": 0, "wr": 31.6}, {"label": "ボトルガイザー", "n": 15, "w": 4, "l": 10, "d": 1, "wr": 28.6}, {"label": ".96ガロン爪", "n": 10, "w": 0, "l": 10, "d": 0, "wr": 0.0}, {"label": "ソイチューバー", "n": 8, "w": 4, "l": 4, "d": 0, "wr": 50.0}, {"label": "トライストリンガー", "n": 4, "w": 2, "l": 2, "d": 0, "wr": 50.0}, {"label": "Rブラスターエリートデコ", "n": 2, "w": 1, "l": 1, "d": 0, "wr": 50.0}, {"label": "N-ZAP85", "n": 2, "w": 1, "l": 1, "d": 0, "wr": 50.0}, {"label": "イグザミナー", "n": 2, "w": 1, "l": 1, "d": 0, "wr": 50.0}, {"label": "リッター4K", "n": 2, "w": 1, "l": 1, "d": 0, "wr": 50.0}, {"label": "スペースシューター", "n": 2, "w": 2, "l": 0, "d": 0, "wr": 100.0}, {"label": "RブラスターエリートWNTR", "n": 1, "w": 0, "l": 1, "d": 0, "wr": 0.0}, {"label": "ヒッセン・ヒュー", "n": 1, "w": 1, "l": 0, "d": 0, "wr": 100.0}, {"label": "クーゲルシュライバー", "n": 1, "w": 1, "l": 0, "d": 0, "wr": 100.0}, {"label": "スペースシューターコラボ", "n": 1, "w": 0, "l": 1, "d": 0, "wr": 0.0}, {"label": "ノーチラス47", "n": 1, "w": 0, "l": 1, "d": 0, "wr": 0.0}, {"label": "スプラチャージャー", "n": 1, "w": 1, "l": 0, "d": 0, "wr": 100.0}, {"label": "スクイックリンα", "n": 1, "w": 1, "l": 0, "d": 0, "wr": 100.0}, {"label": "ドライブワイパー", "n": 1, "w": 1, "l": 0, "d": 0, "wr": 100.0}], "baron": [{"label": "ドライブワイパー", "n": 67, "w": 24, "l": 43, "d": 0, "wr": 35.8}, {"label": "フルイドV", "n": 63, "w": 37, "l": 24, "d": 2, "wr": 60.7}, {"label": "イグザミナー", "n": 58, "w": 26, "l": 32, "d": 0, "wr": 44.8}, {"label": "ヒッセン・ヒュー", "n": 35, "w": 13, "l": 21, "d": 1, "wr": 38.2}, {"label": "バケットスロッシャー", "n": 31, "w": 16, "l": 15, "d": 0, "wr": 51.6}, {"label": "LACT-450デコ", "n": 26, "w": 9, "l": 17, "d": 0, "wr": 34.6}, {"label": "キャンピングシェルターソレーラ", "n": 23, "w": 14, "l": 9, "d": 0, "wr": 60.9}, {"label": "スパッタリー", "n": 22, "w": 9, "l": 13, "d": 0, "wr": 40.9}, {"label": "ドライブワイパーデコ", "n": 22, "w": 11, "l": 11, "d": 0, "wr": 50.0}, {"label": "L3リールガン", "n": 22, "w": 15, "l": 7, "d": 0, "wr": 68.2}, {"label": "N-ZAP85", "n": 13, "w": 2, "l": 11, "d": 0, "wr": 15.4}, {"label": "パラシェルターソレーラ", "n": 9, "w": 6, "l": 3, "d": 0, "wr": 66.7}, {"label": "フルイドVカスタム", "n": 9, "w": 4, "l": 5, "d": 0, "wr": 44.4}, {"label": "スプラシューター", "n": 9, "w": 4, "l": 5, "d": 0, "wr": 44.4}, {"label": "パラシェルター", "n": 7, "w": 6, "l": 1, "d": 0, "wr": 85.7}, {"label": "LACT-450", "n": 6, "w": 1, "l": 5, "d": 0, "wr": 16.7}, {"label": "スパッタリー・ヒュー", "n": 4, "w": 0, "l": 4, "d": 0, "wr": 0.0}, {"label": "シャープマーカー", "n": 4, "w": 3, "l": 1, "d": 0, "wr": 75.0}, {"label": "キャンピングシェルター", "n": 2, "w": 1, "l": 1, "d": 0, "wr": 50.0}, {"label": ".52ガロン", "n": 2, "w": 0, "l": 1, "d": 1, "wr": 0.0}, {"label": "ノーチラス47", "n": 2, "w": 2, "l": 0, "d": 0, "wr": 100.0}, {"label": "ボトルガイザー", "n": 2, "w": 1, "l": 1, "d": 0, "wr": 50.0}, {"label": "ジムワイパー", "n": 1, "w": 1, "l": 0, "d": 0, "wr": 100.0}, {"label": "スパイガジェット", "n": 1, "w": 1, "l": 0, "d": 0, "wr": 100.0}, {"label": "ラピッドブラスター", "n": 1, "w": 1, "l": 0, "d": 0, "wr": 100.0}, {"label": "プロモデラーMG", "n": 1, "w": 1, "l": 0, "d": 0, "wr": 100.0}, {"label": "ホクサイ", "n": 1, "w": 1, "l": 0, "d": 0, "wr": 100.0}, {"label": "バケットスロッシャーデコ", "n": 1, "w": 1, "l": 0, "d": 0, "wr": 100.0}, {"label": "スプラマニューバー", "n": 1, "w": 1, "l": 0, "d": 0, "wr": 100.0}], "ちいがわ": [{"label": "バレルスピナー", "n": 7, "w": 0, "l": 7, "d": 0, "wr": 0.0}, {"label": "スプラスピナーPYTN", "n": 1, "w": 0, "l": 1, "d": 0, "wr": 0.0}]}, "roster": {"みけねこ": {"n": 393, "w": 183, "l": 204, "d": 6, "wr": 47.3, "top_weapon": "ジムワイパー"}, "baron": {"n": 445, "w": 211, "l": 230, "d": 4, "wr": 47.8, "top_weapon": "ドライブワイパー"}, "ちいがわ": {"n": 8, "w": 0, "l": 8, "d": 0, "wr": 0.0, "top_weapon": "バレルスピナー"}, "自分": {"n": 521, "w": 254, "l": 259, "d": 8, "wr": 49.5, "top_weapon": "ケルビン525"}}, "monthly": [{"label": "2022-10", "n": 22, "w": 17, "l": 5, "d": 0, "wr": 77.3}, {"label": "2022-11", "n": 6, "w": 6, "l": 0, "d": 0, "wr": 100.0}, {"label": "2022-12", "n": 25, "w": 16, "l": 9, "d": 0, "wr": 64.0}, {"label": "2023-02", "n": 34, "w": 17, "l": 16, "d": 1, "wr": 51.5}, {"label": "2023-07", "n": 15, "w": 9, "l": 3, "d": 3, "wr": 75.0}, {"label": "2023-08", "n": 10, "w": 10, "l": 0, "d": 0, "wr": 100.0}, {"label": "2023-10", "n": 16, "w": 6, "l": 10, "d": 0, "wr": 37.5}, {"label": "2023-11", "n": 19, "w": 9, "l": 10, "d": 0, "wr": 47.4}, {"label": "2024-02", "n": 32, "w": 10, "l": 22, "d": 0, "wr": 31.2}, {"label": "2024-03", "n": 50, "w": 16, "l": 33, "d": 1, "wr": 32.7}, {"label": "2024-04", "n": 34, "w": 10, "l": 23, "d": 1, "wr": 30.3}, {"label": "2024-05", "n": 13, "w": 10, "l": 3, "d": 0, "wr": 76.9}, {"label": "2024-06", "n": 61, "w": 33, "l": 26, "d": 2, "wr": 55.9}, {"label": "2024-07", "n": 32, "w": 22, "l": 10, "d": 0, "wr": 68.8}, {"label": "2024-08", "n": 35, "w": 19, "l": 16, "d": 0, "wr": 54.3}, {"label": "2024-09", "n": 22, "w": 10, "l": 12, "d": 0, "wr": 45.5}, {"label": "2024-10", "n": 29, "w": 15, "l": 14, "d": 0, "wr": 51.7}, {"label": "2024-11", "n": 20, "w": 5, "l": 15, "d": 0, "wr": 25.0}, {"label": "2024-12", "n": 11, "w": 5, "l": 6, "d": 0, "wr": 45.5}, {"label": "2026-08", "n": 35, "w": 9, "l": 26, "d": 0, "wr": 25.7}]}</script>
+<script>
+const DATA = JSON.parse(document.getElementById('data').textContent);
+const tooltip = document.getElementById('tooltip');
+
+function showTip(html, x, y){
+  tooltip.innerHTML = html;
+  tooltip.style.left = (x+14)+'px';
+  tooltip.style.top = (y+14)+'px';
+  tooltip.classList.add('show');
+}
+function hideTip(){ tooltip.classList.remove('show'); }
+
+function divColor(wr){
+  if(wr === null || wr === undefined) return 'var(--div-neutral)';
+  if(wr < 35) return 'var(--div-bad2)';
+  if(wr < 48) return 'var(--div-bad1)';
+  if(wr <= 52) return 'var(--div-neutral)';
+  if(wr <= 65) return 'var(--div-good1)';
+  return 'var(--div-good2)';
+}
+function fmtRecord(d){
+  let s = `${d.w}勝${d.l}敗`;
+  if(d.d) s += `${d.d}分`;
+  return s;
+}
+function wrText(d){
+  return d.wr === null ? '—' : d.wr.toFixed(1)+'%';
+}
+
+/* ---------- hero stat tiles ---------- */
+(function(){
+  const o = DATA.overall;
+  const tiles = [
+    {n:o.n, l:'総試合数', accent:false},
+    {n:wrText(o), l:'勝率', accent:true},
+    {n:fmtRecord(o), l:'内訳', accent:false},
+  ];
+  document.getElementById('hero-stats').innerHTML = tiles.map(t=>`
+    <div class="stat-tile ${t.accent?'accent':''}">
+      <div class="n num">${t.n}</div>
+      <div class="l">${t.l}</div>
+    </div>
+  `).join('');
+})();
+
+/* ---------- roster ---------- */
+(function(){
+  const order = [
+    ['自分','--p-self'], ['baron','--p-baron'], ['みけねこ','--p-mike'], ['ちいがわ','--p-chii']
+  ];
+  const el = document.getElementById('roster');
+  el.innerHTML = order.map(([name,cvar])=>{
+    const d = DATA.roster[name];
+    return `
+    <div class="roster-card" style="--dot:var(${cvar})">
+      <div class="who"><span class="dot"></span>${name}</div>
+      <div class="wr num" style="color:var(${cvar})">${wrText(d)}</div>
+      <div class="wl">${fmtRecord(d)} &middot; n=${d.n}</div>
+      <div class="wpn">主武器 <b>${d.top_weapon}</b></div>
+    </div>`;
+  }).join('');
+})();
+
+/* ---------- generic bar row ---------- */
+function barRow(label, d, opts={}){
+  const wr = d.wr === null ? 0 : d.wr;
+  const color = opts.color || divColor(d.wr);
+  return `
+  <div class="bar-row" data-tip="${label} &middot; ${fmtRecord(d)} &middot; n=${d.n}">
+    <div class="label" title="${label}">${label}</div>
+    <div class="bar-track">
+      <div class="bar-mid"></div>
+      <div class="bar-fill" style="width:${wr}%; background:${color};"></div>
+    </div>
+    <div class="figs"><strong>${wrText(d)}</strong> &nbsp;n=${d.n} (${fmtRecord(d)})</div>
+  </div>`;
+}
+function wireTips(container){
+  container.querySelectorAll('.bar-row').forEach(row=>{
+    row.addEventListener('mousemove', e=>showTip(row.dataset.tip, e.clientX, e.clientY));
+    row.addEventListener('mouseleave', hideTip);
+  });
+}
+
+/* ---------- combos ---------- */
+(function(){
+  const el = document.getElementById('combo-bars');
+  el.innerHTML = DATA.combos.map(c=>barRow(c.label, c)).join('');
+  wireTips(el);
+})();
+
+/* ---------- weapon tabs ---------- */
+(function(){
+  const players = [
+    ['自分','self','--p-self'], ['baron','baron','--p-baron'],
+    ['みけねこ','みけねこ','--p-mike'], ['ちいがわ','ちいがわ','--p-chii']
+  ];
+  const tabsEl = document.getElementById('wtabs');
+  const panelsEl = document.getElementById('wpanels');
+
+  tabsEl.innerHTML = players.map(([label,key,cvar],i)=>`
+    <button class="tab-btn" role="tab" aria-selected="${i===0}" data-key="${key}" style="--tabc:var(${cvar})">
+      <span class="dot" style="background:var(${cvar})"></span>${label}
+    </button>`).join('');
+
+  panelsEl.innerHTML = players.map(([label,key,cvar],i)=>{
+    const rows = DATA.weapons[key];
+    const chartRows = rows.filter(r=>r.n>=5).slice(0,12);
+    const chart = chartRows.map(r=>barRow(r.label, r, {color:`var(${cvar})`})).join('');
+    const tableRows = rows.map(r=>`
+      <tr>
+        <td>${r.label}</td>
+        <td class="num">${r.n}</td>
+        <td class="num">${r.w}</td>
+        <td class="num">${r.l}</td>
+        <td class="num">${r.d}</td>
+        <td class="num"><span class="wr-chip" style="background:${divColor(r.wr)}">${wrText(r)}</span></td>
+      </tr>`).join('');
+    return `
+    <div class="tab-panel ${i===0?'active':''}" data-key="${key}">
+      <div class="bar-list">${chart || '<p class="section-note">n&ge;5の武器なし</p>'}</div>
+      <div class="wtable-wrap">
+        <table class="wtable">
+          <thead><tr><th>武器</th><th class="num">n</th><th class="num">勝</th><th class="num">負</th><th class="num">分</th><th class="num">勝率</th></tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('');
+
+  wireTips(panelsEl);
+
+  tabsEl.addEventListener('click', e=>{
+    const btn = e.target.closest('.tab-btn');
+    if(!btn) return;
+    tabsEl.querySelectorAll('.tab-btn').forEach(b=>b.setAttribute('aria-selected', b===btn));
+    panelsEl.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active', p.dataset.key===btn.dataset.key));
+  });
+})();
+
+/* ---------- stages ---------- */
+(function(){
+  const el = document.getElementById('stage-bars');
+  const sorted = [...DATA.stages].sort((a,b)=> (b.wr??0) - (a.wr??0));
+  el.innerHTML = sorted.map(s=>barRow(s.label, s)).join('');
+  wireTips(el);
+})();
+
+/* ---------- monthly chart ---------- */
+(function(){
+  const svg = document.getElementById('monthly-svg');
+  const data = DATA.monthly;
+  const W=960,H=260,padL=34,padR=16,padT=16,padB=34;
+  const plotW = W-padL-padR, plotH = H-padT-padB;
+  const n = data.length;
+  const x = i => padL + (n===1?0:(plotW*i/(n-1)));
+  const y = wr => padT + plotH*(1-wr/100);
+
+  let defs = `<defs><linearGradient id="moGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="var(--p-self)" stop-opacity=".28"/>
+    <stop offset="100%" stop-color="var(--p-self)" stop-opacity="0"/>
+  </linearGradient></defs>`;
+
+  let gridlines = '';
+  [0,25,50,75,100].forEach(v=>{
+    const yy = y(v);
+    gridlines += `<line x1="${padL}" y1="${yy}" x2="${W-padR}" y2="${yy}" class="${v===50?'mo-mid':''}" stroke="${v===50?'':'var(--border)'}" stroke-width="1" opacity="${v===50?1:.6}"/>`;
+    gridlines += `<text x="${padL-8}" y="${yy+3}" text-anchor="end" class="mo-axis-label">${v}</text>`;
+  });
+
+  const linePts = data.map((d,i)=>`${x(i)},${y(d.wr??50)}`).join(' ');
+  const areaPts = `${x(0)},${y(0)} ` + linePts + ` ${x(n-1)},${y(0)}`;
+
+  let gapMarks = '';
+  for(let i=1;i<n;i++){
+    const [py,pm] = data[i-1].label.split('-').map(Number);
+    const [cy,cm] = data[i].label.split('-').map(Number);
+    const monthsBetween = (cy-py)*12 + (cm-pm);
+    if(monthsBetween > 1){
+      const mx = (x(i-1)+x(i))/2;
+      gapMarks += `<text x="${mx}" y="${H-8}" text-anchor="middle" class="mo-gap">⋯ ${monthsBetween-1}ヶ月分のデータなし ⋯</text>`;
+    }
+  }
+
+  let labels = '';
+  data.forEach((d,i)=>{
+    if(i%2===0 || n<14){
+      labels += `<text x="${x(i)}" y="${H-padB+16}" text-anchor="middle" class="mo-axis-label">${d.label.slice(2)}</text>`;
+    }
+  });
+
+  let dots = '';
+  data.forEach((d,i)=>{
+    const cx=x(i), cy=y(d.wr??50);
+    const hi = d.wr!==null && (d.wr>=65 || d.wr<35);
+    dots += `<circle class="mo-dot ${hi?'hi':''}" cx="${cx}" cy="${cy}" r="4.5"
+      data-tip="${d.label} &middot; ${wrText(d)} &middot; ${fmtRecord(d)} &middot; n=${d.n}"></circle>`;
+  });
+
+  svg.innerHTML = defs + gridlines +
+    `<polygon class="mo-area" points="${areaPts}"></polygon>` +
+    `<polyline class="mo-line" points="${linePts}"></polyline>` +
+    dots + gapMarks + labels;
+
+  svg.querySelectorAll('.mo-dot').forEach(dot=>{
+    dot.addEventListener('mousemove', e=>showTip(dot.dataset.tip, e.clientX, e.clientY));
+    dot.addEventListener('mouseleave', hideTip);
+  });
+})();
+</script>
