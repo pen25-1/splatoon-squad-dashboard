@@ -181,6 +181,7 @@ footer p{margin:4px 0;}
       </div>
       <select class="ctl-select" id="rule-select"></select>
       <select class="ctl-select" id="lobby-select"></select>
+      <select class="ctl-select" id="combo-select"></select>
     </div>
 
     <div class="hero-stats" id="hero-stats"></div>
@@ -281,18 +282,23 @@ function divColor(wr){
 function fmtRecord(d){ let s = `${d.w}勝${d.l}敗`; if(d.d) s += `${d.d}分`; return s; }
 function wrText(d){ return d.wr === null ? '—' : d.wr.toFixed(1)+'%'; }
 
-const state = { view: 'team', rule: 'ALL', lobby: 'ALL', sort: {} };
+const state = { view: 'team', rule: 'ALL', lobby: 'ALL', combo: 'ALL', sort: {} };
 
 const RULES = [...new Set(ALL_ROWS.map(r=>r.rule).filter(Boolean))];
 const LOBBIES = [...new Set(ALL_ROWS.map(r=>r.lobby).filter(Boolean))];
+const comboLabel = r => Object.keys(r.teammates||{}).sort().join(' + ');
+const COMBOS = [...new Set(ALL_ROWS.map(comboLabel).filter(Boolean))];
 
 const ruleSelect = document.getElementById('rule-select');
 ruleSelect.innerHTML = `<option value="ALL">ルール: すべて</option>` + RULES.map(r=>`<option value="${r}">${r}</option>`).join('');
 const lobbySelect = document.getElementById('lobby-select');
 lobbySelect.innerHTML = `<option value="ALL">ロビー: すべて</option>` + LOBBIES.map(l=>`<option value="${l}">${l}</option>`).join('');
+const comboSelect = document.getElementById('combo-select');
+comboSelect.innerHTML = `<option value="ALL">組み合わせ: すべて</option>` + COMBOS.map(c=>`<option value="${c}">${c}</option>`).join('');
 
 ruleSelect.addEventListener('change', e=>{ state.rule = e.target.value; render(); });
 lobbySelect.addEventListener('change', e=>{ state.lobby = e.target.value; render(); });
+comboSelect.addEventListener('change', e=>{ state.combo = e.target.value; render(); });
 document.getElementById('view-toggle').addEventListener('click', e=>{
   const btn = e.target.closest('button'); if(!btn) return;
   state.view = btn.dataset.view;
@@ -360,6 +366,7 @@ function filteredRows(){
     if(state.rule !== 'ALL' && r.rule !== state.rule) return false;
     if(state.lobby !== 'ALL' && r.lobby !== state.lobby) return false;
     if(state.view === 'team' && !(r.teammates && Object.keys(r.teammates).length)) return false;
+    if(state.view === 'team' && state.combo !== 'ALL' && comboLabel(r) !== state.combo) return false;
     return true;
   });
 }
@@ -370,9 +377,12 @@ function render(){
 
   document.getElementById('section-roster').style.display = isTeam ? '' : 'none';
   document.getElementById('section-combos').style.display = isTeam ? '' : 'none';
+  comboSelect.style.display = isTeam ? '' : 'none';
+  if(!isTeam && state.combo !== 'ALL'){ state.combo = 'ALL'; comboSelect.value = 'ALL'; }
   document.getElementById('empty-note').style.display = rows.length ? 'none' : '';
 
-  const scopeLabel = `${state.rule==='ALL'?'全ルール':state.rule} &middot; ${state.lobby==='ALL'?'全ロビー':state.lobby}`;
+  const scopeLabel = `${state.rule==='ALL'?'全ルール':state.rule} &middot; ${state.lobby==='ALL'?'全ロビー':state.lobby}` +
+    (isTeam && state.combo!=='ALL' ? ` &middot; ${state.combo}` : '');
   document.getElementById('hero-title').textContent = isTeam ? 'スクワッド戦績ダッシュボード' : '自分の戦績ダッシュボード(全ルール込み)';
   document.getElementById('hero-sub').innerHTML = isTeam
     ? `みけねこ・baron・ちいがわのいずれかとチームを組んだ試合。現在の絞り込み: ${scopeLabel}`
