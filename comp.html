@@ -188,7 +188,7 @@ footer p{margin:4px 0;}
       <span class="section-note" id="results-note"></span>
     </div>
     <div class="callout" style="margin-bottom:12px;">
-      <b>順位について:</b> 単体武器の強さは一切使っていません。「相性スコア」は、4枠の中の全6通りの武器ペアそれぞれの相性(シナジー)を1つずつ合計したものです(役割(射程帯)・武器種の偏りには軽いペナルティを掛けています)。右の「ペア内訳」で、どの組み合わせがどれだけ効いているかを確認できます。単体の強さで並べると常に「単体最強の武器」ばかりが手持ちに関係なく出てきてしまうため、勝率予測は表示せず、あえてペア相性の積み上げだけで順位を決めています。特定の武器が複数の「手持ち」で繰り返し出てくる場合は、その武器が幅広い相手と相性が良い(平均的にペア項がプラス)ことを示している可能性があります。
+      <b>順位について:</b> 単体武器の強さは一切使っていません。「相性スコア」は<b>手持ちの武器×提案する武器</b>の相性(シナジー)だけを合計したものです(役割(射程帯)・武器種の偏りには軽いペナルティを掛けています)。提案武器同士の相性や手持ち同士の相性は「ペア内訳」に参考情報として薄く表示していますが、順位には影響しません。これを分けなかった場合、モデル全体で最も相性の良いペア(手持ちに関係なく常に強い組み合わせ)がどの提案にも紛れ込んでしまうため、あえて「手持ちとの相性」だけで順位を決めています。
     </div>
     <div class="stbl-wrap">
       <table class="stbl">
@@ -431,32 +431,31 @@ function suggest(have) {
   for (let a = 0; a < have.length; a++) for (let b = a + 1; b < have.length; b++) haveHavePairs.push([have[a], have[b]]);
 
   function consider(openIds) {
-    let p = basePair;
-    const breakdown = haveHavePairs.map(([a, b]) => [a, b, pairW(a, b)]);
+    // `haveOpenSum` -- compatibility between what you already picked and each
+    // candidate -- is the ONLY thing that decides ranking. open-open pairs
+    // are tracked and shown for context, but excluded from the score: without
+    // this, the single globally-strongest pair in the whole model (whatever
+    // it happens to be) gets pulled into almost every suggestion regardless
+    // of `have`, since it alone outweighs most have-specific chemistry.
+    let haveOpenSum = 0;
+    const breakdown = haveHavePairs.map(([a, b]) => [a, b, pairW(a, b), 'have-have']);
     for (let a = 0; a < openIds.length; a++) {
       for (let b = a + 1; b < openIds.length; b++) {
-        const v = pairW(openIds[a], openIds[b]);
-        p += v;
-        breakdown.push([openIds[a], openIds[b], v]);
+        breakdown.push([openIds[a], openIds[b], pairW(openIds[a], openIds[b]), 'open-open']);
       }
     }
     for (const h of have) for (const oi of openIds) {
       const v = pairW(h, oi);
-      p += v;
-      breakdown.push([h, oi, v]);
+      haveOpenSum += v;
+      breakdown.push([h, oi, v, 'have-open']);
     }
-    // Rank by pair-synergy alone, never single-weapon strength: a weapon's
-    // own single-weapon strength can be 10-80x larger than any pair term, so
-    // ranking by total score just returns "the globally strongest weapons
-    // available" almost regardless of what you already picked. This score is
-    // nothing but the sum of the breakdown below -- no hidden single term.
     const penalty = rolePenalty(have.concat(openIds));
-    const compatScore = p - penalty;
+    const compatScore = haveOpenSum - penalty;
     if (top.length < TOP_K) {
-      top.push({ compatScore, penalty, pair: p, open: openIds.slice(), breakdown });
+      top.push({ compatScore, penalty, open: openIds.slice(), breakdown });
       if (top.length === TOP_K) top.sort((x, y) => x.compatScore - y.compatScore);
     } else if (compatScore > top[0].compatScore) {
-      top[0] = { compatScore, penalty, pair: p, open: openIds.slice(), breakdown };
+      top[0] = { compatScore, penalty, open: openIds.slice(), breakdown };
       top.sort((x, y) => x.compatScore - y.compatScore);
     }
   }
@@ -486,12 +485,14 @@ function suggest(have) {
   return top;
 }
 
+const KIND_LABEL = { 'have-open': '手持ち×提案', 'open-open': '提案同士(参考)', 'have-have': '手持ち同士' };
 function pairBreakdownHtml(breakdown) {
-  const sorted = [...breakdown].sort((a, b) => b[2] - a[2]);
-  return sorted.map(([a, b, v]) => {
+  const sorted = [...breakdown].sort((a, b) => (a[3] === 'have-open') - (b[3] === 'have-open') || b[2] - a[2]).reverse();
+  return sorted.map(([a, b, v, kind]) => {
     const cls = v >= 0 ? 'pos' : (v <= 0 ? 'neg' : '');
     const sign = v >= 0 ? '+' : '';
-    return `<div class="pair-row" style="padding:3px 0;font-size:.78rem;"><span>${byId[a].name}×${byId[b].name}</span><span class="v ${cls}">${sign}${v.toFixed(3)}</span></div>`;
+    const dim = kind === 'have-open' ? '' : 'opacity:.55;';
+    return `<div class="pair-row" style="padding:3px 0;font-size:.78rem;${dim}"><span>${byId[a].name}×${byId[b].name} <span style="color:var(--text-3);font-size:.68rem;">(${KIND_LABEL[kind]})</span></span><span class="v ${cls}">${sign}${v.toFixed(3)}</span></div>`;
   }).join('');
 }
 
@@ -512,7 +513,7 @@ function renderResults(have, results) {
       <td style="min-width:220px;">${pairBreakdownHtml(r.breakdown)}</td>`;
     body.appendChild(tr);
   });
-  document.getElementById('results-note').textContent = `上位${results.length}件・相性スコア(全ペアの合計)順`;
+  document.getElementById('results-note').textContent = `上位${results.length}件・手持ちとの相性スコア順`;
   document.getElementById('results-section').style.display = '';
 }
 
@@ -614,21 +615,20 @@ function updateSpecialHint() {
 function suggestSpecials(have) {
   const nOpen = 4 - have.length;
   const haveSet = new Set(have);
-  let basePair = 0;
   const haveHavePairs = [];
-  for (let a = 0; a < have.length; a++) for (let b = a + 1; b < have.length; b++) { basePair += spPairW(have[a], have[b]); haveHavePairs.push([have[a], have[b]]); }
+  for (let a = 0; a < have.length; a++) for (let b = a + 1; b < have.length; b++) haveHavePairs.push([have[a], have[b]]);
 
   const results = [];
   function consider(openIds) {
-    let p = basePair;
-    const breakdown = haveHavePairs.map(([a, b]) => [a, b, spPairW(a, b)]);
+    let haveOpenSum = 0;
+    const breakdown = haveHavePairs.map(([a, b]) => [a, b, spPairW(a, b), 'have-have']);
     for (let a = 0; a < openIds.length; a++) for (let b = a + 1; b < openIds.length; b++) {
-      const v = spPairW(openIds[a], openIds[b]); p += v; breakdown.push([openIds[a], openIds[b], v]);
+      breakdown.push([openIds[a], openIds[b], spPairW(openIds[a], openIds[b]), 'open-open']);
     }
     for (const h of have) for (const oi of openIds) {
-      const v = spPairW(h, oi); p += v; breakdown.push([h, oi, v]);
+      const v = spPairW(h, oi); haveOpenSum += v; breakdown.push([h, oi, v, 'have-open']);
     }
-    results.push({ compatScore: p, open: openIds.slice(), breakdown });
+    results.push({ compatScore: haveOpenSum, open: openIds.slice(), breakdown });
   }
 
   function combos(depth, start, acc) {
@@ -647,11 +647,12 @@ function suggestSpecials(have) {
 }
 
 function spPairBreakdownHtml(breakdown) {
-  const sorted = [...breakdown].sort((a, b) => b[2] - a[2]);
-  return sorted.map(([a, b, v]) => {
+  const sorted = [...breakdown].sort((a, b) => (a[3] === 'have-open') - (b[3] === 'have-open') || b[2] - a[2]).reverse();
+  return sorted.map(([a, b, v, kind]) => {
     const cls = v >= 0 ? 'pos' : (v <= 0 ? 'neg' : '');
     const sign = v >= 0 ? '+' : '';
-    return `<div class="pair-row" style="padding:3px 0;font-size:.78rem;"><span>${SPECIALS[a].name}×${SPECIALS[b].name}</span><span class="v ${cls}">${sign}${v.toFixed(3)}</span></div>`;
+    const dim = kind === 'have-open' ? '' : 'opacity:.55;';
+    return `<div class="pair-row" style="padding:3px 0;font-size:.78rem;${dim}"><span>${SPECIALS[a].name}×${SPECIALS[b].name} <span style="color:var(--text-3);font-size:.68rem;">(${KIND_LABEL[kind]})</span></span><span class="v ${cls}">${sign}${v.toFixed(3)}</span></div>`;
   }).join('');
 }
 
