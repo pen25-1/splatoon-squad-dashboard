@@ -188,11 +188,11 @@ footer p{margin:4px 0;}
       <span class="section-note" id="results-note"></span>
     </div>
     <div class="callout" style="margin-bottom:12px;">
-      <b>順位について:</b> 「相性スコア」は、選んだ武器と残り枠の武器ペア相性(シナジー)だけを合計したもので、単体武器の強さは含みません(役割(射程帯)・武器種の偏りには軽いペナルティを掛けています)。単体の強さだけで並べると、常に「単体最強の武器」ばかりが手持ちに関係なく出てきてしまうため、あえて武器ペア相性だけで並べ替えています。「中立勝率予測」は単体の強さも含めたモデルの生スコアから計算した参考値です。特定の武器が複数の「手持ち」で繰り返し出てくる場合は、その武器が幅広い相手と相性が良い(平均的にペア項がプラス)ことを示している可能性があります。
+      <b>順位について:</b> 単体武器の強さは一切使っていません。「相性スコア」は、4枠の中の全6通りの武器ペアそれぞれの相性(シナジー)を1つずつ合計したものです(役割(射程帯)・武器種の偏りには軽いペナルティを掛けています)。右の「ペア内訳」で、どの組み合わせがどれだけ効いているかを確認できます。単体の強さで並べると常に「単体最強の武器」ばかりが手持ちに関係なく出てきてしまうため、勝率予測は表示せず、あえてペア相性の積み上げだけで順位を決めています。特定の武器が複数の「手持ち」で繰り返し出てくる場合は、その武器が幅広い相手と相性が良い(平均的にペア項がプラス)ことを示している可能性があります。
     </div>
     <div class="stbl-wrap">
       <table class="stbl">
-        <thead><tr><th></th><th>編成(4枠)</th><th class="num">相性<br>スコア</th><th class="num">ペナルティ</th><th class="num">単体寄与</th><th class="num">ペア寄与</th><th class="num">中立勝率予測</th></tr></thead>
+        <thead><tr><th></th><th>編成(4枠)</th><th class="num">相性<br>スコア</th><th class="num">ペナルティ</th><th>ペア内訳(全6組)</th></tr></thead>
         <tbody id="results-body"></tbody>
       </table>
     </div>
@@ -245,7 +245,7 @@ footer p{margin:4px 0;}
     <div id="sp-results-section" style="display:none;margin-top:20px;">
       <div class="stbl-wrap">
         <table class="stbl">
-          <thead><tr><th></th><th>スペシャル構成(4枠)</th><th class="num">相性スコア</th><th class="num">単体寄与</th><th class="num">ペア寄与</th><th class="num">中立勝率予測</th></tr></thead>
+          <thead><tr><th></th><th>スペシャル構成(4枠)</th><th class="num">相性スコア</th><th>ペア内訳(全6組)</th></tr></thead>
           <tbody id="sp-results-body"></tbody>
         </table>
       </div>
@@ -427,27 +427,36 @@ function suggest(have) {
 
   const TOP_K = 20;
   const top = [];
+  const haveHavePairs = [];
+  for (let a = 0; a < have.length; a++) for (let b = a + 1; b < have.length; b++) haveHavePairs.push([have[a], have[b]]);
 
   function consider(openIds) {
-    let s = baseSingle, p = basePair;
-    for (const oi of openIds) s += singleW(oi);
+    let p = basePair;
+    const breakdown = haveHavePairs.map(([a, b]) => [a, b, pairW(a, b)]);
     for (let a = 0; a < openIds.length; a++) {
-      for (let b = a + 1; b < openIds.length; b++) p += pairW(openIds[a], openIds[b]);
+      for (let b = a + 1; b < openIds.length; b++) {
+        const v = pairW(openIds[a], openIds[b]);
+        p += v;
+        breakdown.push([openIds[a], openIds[b], v]);
+      }
     }
-    for (const h of have) for (const oi of openIds) p += pairW(h, oi);
-    const rawScore = s + p;
-    // Rank by pair-synergy alone, not total score: a weapon's own single-weapon
-    // strength can be 10-80x larger than any pair term, so ranking by total
-    // score just returns "the globally strongest weapons available" almost
-    // regardless of what you already picked. Ranking by `p` answers "what
-    // specifically pairs well with this weapon" instead.
+    for (const h of have) for (const oi of openIds) {
+      const v = pairW(h, oi);
+      p += v;
+      breakdown.push([h, oi, v]);
+    }
+    // Rank by pair-synergy alone, never single-weapon strength: a weapon's
+    // own single-weapon strength can be 10-80x larger than any pair term, so
+    // ranking by total score just returns "the globally strongest weapons
+    // available" almost regardless of what you already picked. This score is
+    // nothing but the sum of the breakdown below -- no hidden single term.
     const penalty = rolePenalty(have.concat(openIds));
     const compatScore = p - penalty;
     if (top.length < TOP_K) {
-      top.push({ rawScore, compatScore, penalty, single: s, pair: p, open: openIds.slice() });
+      top.push({ compatScore, penalty, pair: p, open: openIds.slice(), breakdown });
       if (top.length === TOP_K) top.sort((x, y) => x.compatScore - y.compatScore);
     } else if (compatScore > top[0].compatScore) {
-      top[0] = { rawScore, compatScore, penalty, single: s, pair: p, open: openIds.slice() };
+      top[0] = { compatScore, penalty, pair: p, open: openIds.slice(), breakdown };
       top.sort((x, y) => x.compatScore - y.compatScore);
     }
   }
@@ -477,6 +486,15 @@ function suggest(have) {
   return top;
 }
 
+function pairBreakdownHtml(breakdown) {
+  const sorted = [...breakdown].sort((a, b) => b[2] - a[2]);
+  return sorted.map(([a, b, v]) => {
+    const cls = v >= 0 ? 'pos' : (v <= 0 ? 'neg' : '');
+    const sign = v >= 0 ? '+' : '';
+    return `<div class="pair-row" style="padding:3px 0;font-size:.78rem;"><span>${byId[a].name}×${byId[b].name}</span><span class="v ${cls}">${sign}${v.toFixed(3)}</span></div>`;
+  }).join('');
+}
+
 function renderResults(have, results) {
   const body = document.getElementById('results-body');
   body.innerHTML = '';
@@ -491,12 +509,10 @@ function renderResults(have, results) {
       <td class="comp-cell">${comp}</td>
       <td class="num">${r.compatScore.toFixed(3)}</td>
       <td class="num penalty-cell ${penCls}">${r.penalty > 0.001 ? '-' + r.penalty.toFixed(3) : '—'}</td>
-      <td class="num">${r.single.toFixed(3)}</td>
-      <td class="num">${r.pair.toFixed(3)}</td>
-      <td class="num">${(sigmoid(r.rawScore) * 100).toFixed(1)}%</td>`;
+      <td style="min-width:220px;">${pairBreakdownHtml(r.breakdown)}</td>`;
     body.appendChild(tr);
   });
-  document.getElementById('results-note').textContent = `上位${results.length}件・相性スコア順(中立な相手との仮想勝率は生スコアベース)`;
+  document.getElementById('results-note').textContent = `上位${results.length}件・相性スコア(全ペアの合計)順`;
   document.getElementById('results-section').style.display = '';
 }
 
@@ -598,18 +614,21 @@ function updateSpecialHint() {
 function suggestSpecials(have) {
   const nOpen = 4 - have.length;
   const haveSet = new Set(have);
-  const baseSingle = have.reduce((s, i) => s + spSingleW(i), 0);
   let basePair = 0;
-  for (let a = 0; a < have.length; a++) for (let b = a + 1; b < have.length; b++) basePair += spPairW(have[a], have[b]);
+  const haveHavePairs = [];
+  for (let a = 0; a < have.length; a++) for (let b = a + 1; b < have.length; b++) { basePair += spPairW(have[a], have[b]); haveHavePairs.push([have[a], have[b]]); }
 
   const results = [];
   function consider(openIds) {
-    let s = baseSingle, p = basePair;
-    for (const oi of openIds) s += spSingleW(oi);
-    for (let a = 0; a < openIds.length; a++) for (let b = a + 1; b < openIds.length; b++) p += spPairW(openIds[a], openIds[b]);
-    for (const h of have) for (const oi of openIds) p += spPairW(h, oi);
-    const rawScore = s + p;
-    results.push({ rawScore, compatScore: p, single: s, pair: p, open: openIds.slice() });
+    let p = basePair;
+    const breakdown = haveHavePairs.map(([a, b]) => [a, b, spPairW(a, b)]);
+    for (let a = 0; a < openIds.length; a++) for (let b = a + 1; b < openIds.length; b++) {
+      const v = spPairW(openIds[a], openIds[b]); p += v; breakdown.push([openIds[a], openIds[b], v]);
+    }
+    for (const h of have) for (const oi of openIds) {
+      const v = spPairW(h, oi); p += v; breakdown.push([h, oi, v]);
+    }
+    results.push({ compatScore: p, open: openIds.slice(), breakdown });
   }
 
   function combos(depth, start, acc) {
@@ -627,6 +646,15 @@ function suggestSpecials(have) {
   return results.slice(0, 20);
 }
 
+function spPairBreakdownHtml(breakdown) {
+  const sorted = [...breakdown].sort((a, b) => b[2] - a[2]);
+  return sorted.map(([a, b, v]) => {
+    const cls = v >= 0 ? 'pos' : (v <= 0 ? 'neg' : '');
+    const sign = v >= 0 ? '+' : '';
+    return `<div class="pair-row" style="padding:3px 0;font-size:.78rem;"><span>${SPECIALS[a].name}×${SPECIALS[b].name}</span><span class="v ${cls}">${sign}${v.toFixed(3)}</span></div>`;
+  }).join('');
+}
+
 function renderSpecialResults(have, results) {
   const body = document.getElementById('sp-results-body');
   body.innerHTML = '';
@@ -639,9 +667,7 @@ function renderSpecialResults(have, results) {
       <td class="rank num">${idx + 1}</td>
       <td class="comp-cell">${comp}</td>
       <td class="num">${r.compatScore.toFixed(3)}</td>
-      <td class="num">${r.single.toFixed(3)}</td>
-      <td class="num">${r.pair.toFixed(3)}</td>
-      <td class="num">${(sigmoid(r.rawScore) * 100).toFixed(1)}%</td>`;
+      <td style="min-width:220px;">${spPairBreakdownHtml(r.breakdown)}</td>`;
     body.appendChild(tr);
   });
   document.getElementById('sp-results-section').style.display = '';
