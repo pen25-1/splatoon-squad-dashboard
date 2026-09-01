@@ -167,7 +167,7 @@ footer p{margin:4px 0;}
   <section class="section">
     <div class="section-head">
       <h2>武器の編成を提案</h2>
-      <span class="section-note">4枠のうち1〜3枠を固定 &rarr; 残りのおすすめを計算(同一武器は重複しません)</span>
+      <span class="section-note">4枠のうち1〜3枠を固定 &rarr; 手持ちの武器と相性の良い残り枠を計算(単体の強さではなく武器ペア相性で並べ替え・同一武器は重複しません)</span>
     </div>
     <div class="picker-card">
       <div class="slots">
@@ -188,11 +188,11 @@ footer p{margin:4px 0;}
       <span class="section-note" id="results-note"></span>
     </div>
     <div class="callout" style="margin-bottom:12px;">
-      <b>順位について:</b> 「調整済スコア」はモデルの生スコアに、役割(射程帯)・武器種の偏りへの軽いペナルティを加えたものです(同一武器の重複は不可のため、その分のペナルティはありません)。「中立勝率予測」はモデルの生スコアそのもの(ペナルティ適用前)です。
+      <b>順位について:</b> 「相性スコア」は、選んだ武器と残り枠の武器ペア相性(シナジー)だけを合計したもので、単体武器の強さは含みません(役割(射程帯)・武器種の偏りには軽いペナルティを掛けています)。単体の強さだけで並べると、常に「単体最強の武器」ばかりが手持ちに関係なく出てきてしまうため、あえて武器ペア相性だけで並べ替えています。「中立勝率予測」は単体の強さも含めたモデルの生スコアから計算した参考値です。特定の武器が複数の「手持ち」で繰り返し出てくる場合は、その武器が幅広い相手と相性が良い(平均的にペア項がプラス)ことを示している可能性があります。
     </div>
     <div class="stbl-wrap">
       <table class="stbl">
-        <thead><tr><th></th><th>編成(4枠)</th><th class="num">調整済<br>スコア</th><th class="num">ペナルティ</th><th class="num">単体寄与</th><th class="num">ペア寄与</th><th class="num">中立勝率予測</th></tr></thead>
+        <thead><tr><th></th><th>編成(4枠)</th><th class="num">相性<br>スコア</th><th class="num">ペナルティ</th><th class="num">単体寄与</th><th class="num">ペア寄与</th><th class="num">中立勝率予測</th></tr></thead>
         <tbody id="results-body"></tbody>
       </table>
     </div>
@@ -245,7 +245,7 @@ footer p{margin:4px 0;}
     <div id="sp-results-section" style="display:none;margin-top:20px;">
       <div class="stbl-wrap">
         <table class="stbl">
-          <thead><tr><th></th><th>スペシャル構成(4枠)</th><th class="num">スコア</th><th class="num">単体寄与</th><th class="num">ペア寄与</th><th class="num">中立勝率予測</th></tr></thead>
+          <thead><tr><th></th><th>スペシャル構成(4枠)</th><th class="num">相性スコア</th><th class="num">単体寄与</th><th class="num">ペア寄与</th><th class="num">中立勝率予測</th></tr></thead>
           <tbody id="sp-results-body"></tbody>
         </table>
       </div>
@@ -306,8 +306,8 @@ function pairW(i, j) { return model().pair[i * N + j]; }
 // weapon class -- but only past 2 of the same thing, since "2 backliners" is
 // completely normal play. Same-weapon duplicates are excluded outright by
 // the search itself, not penalized.
-const LAMBDA_TIER = 0.025;
-const LAMBDA_KLASS = 0.015;
+const LAMBDA_TIER = 0.006;
+const LAMBDA_KLASS = 0.004;
 
 const tierBuf = new Float64Array(TIER_ORDER.length);
 const klassBuf = new Float64Array(KLASS_IDS.length);
@@ -436,14 +436,19 @@ function suggest(have) {
     }
     for (const h of have) for (const oi of openIds) p += pairW(h, oi);
     const rawScore = s + p;
+    // Rank by pair-synergy alone, not total score: a weapon's own single-weapon
+    // strength can be 10-80x larger than any pair term, so ranking by total
+    // score just returns "the globally strongest weapons available" almost
+    // regardless of what you already picked. Ranking by `p` answers "what
+    // specifically pairs well with this weapon" instead.
     const penalty = rolePenalty(have.concat(openIds));
-    const adjScore = rawScore - penalty;
+    const compatScore = p - penalty;
     if (top.length < TOP_K) {
-      top.push({ rawScore, adjScore, penalty, single: s, pair: p, open: openIds.slice() });
-      if (top.length === TOP_K) top.sort((x, y) => x.adjScore - y.adjScore);
-    } else if (adjScore > top[0].adjScore) {
-      top[0] = { rawScore, adjScore, penalty, single: s, pair: p, open: openIds.slice() };
-      top.sort((x, y) => x.adjScore - y.adjScore);
+      top.push({ rawScore, compatScore, penalty, single: s, pair: p, open: openIds.slice() });
+      if (top.length === TOP_K) top.sort((x, y) => x.compatScore - y.compatScore);
+    } else if (compatScore > top[0].compatScore) {
+      top[0] = { rawScore, compatScore, penalty, single: s, pair: p, open: openIds.slice() };
+      top.sort((x, y) => x.compatScore - y.compatScore);
     }
   }
 
@@ -468,7 +473,7 @@ function suggest(have) {
     }
   }
 
-  top.sort((x, y) => y.adjScore - x.adjScore);
+  top.sort((x, y) => y.compatScore - x.compatScore);
   return top;
 }
 
@@ -484,14 +489,14 @@ function renderResults(have, results) {
     tr.innerHTML = `
       <td class="rank num">${idx + 1}</td>
       <td class="comp-cell">${comp}</td>
-      <td class="num">${r.adjScore.toFixed(3)}</td>
+      <td class="num">${r.compatScore.toFixed(3)}</td>
       <td class="num penalty-cell ${penCls}">${r.penalty > 0.001 ? '-' + r.penalty.toFixed(3) : '—'}</td>
       <td class="num">${r.single.toFixed(3)}</td>
       <td class="num">${r.pair.toFixed(3)}</td>
       <td class="num">${(sigmoid(r.rawScore) * 100).toFixed(1)}%</td>`;
     body.appendChild(tr);
   });
-  document.getElementById('results-note').textContent = `上位${results.length}件・調整済スコア順(中立な相手との仮想勝率は生スコアベース)`;
+  document.getElementById('results-note').textContent = `上位${results.length}件・相性スコア順(中立な相手との仮想勝率は生スコアベース)`;
   document.getElementById('results-section').style.display = '';
 }
 
@@ -604,7 +609,7 @@ function suggestSpecials(have) {
     for (let a = 0; a < openIds.length; a++) for (let b = a + 1; b < openIds.length; b++) p += spPairW(openIds[a], openIds[b]);
     for (const h of have) for (const oi of openIds) p += spPairW(h, oi);
     const rawScore = s + p;
-    results.push({ rawScore, single: s, pair: p, open: openIds.slice() });
+    results.push({ rawScore, compatScore: p, single: s, pair: p, open: openIds.slice() });
   }
 
   function combos(depth, start, acc) {
@@ -618,7 +623,7 @@ function suggestSpecials(have) {
   }
   combos(nOpen, 0, []);
 
-  results.sort((a, b) => b.rawScore - a.rawScore);
+  results.sort((a, b) => b.compatScore - a.compatScore);
   return results.slice(0, 20);
 }
 
@@ -633,7 +638,7 @@ function renderSpecialResults(have, results) {
     tr.innerHTML = `
       <td class="rank num">${idx + 1}</td>
       <td class="comp-cell">${comp}</td>
-      <td class="num">${r.rawScore.toFixed(3)}</td>
+      <td class="num">${r.compatScore.toFixed(3)}</td>
       <td class="num">${r.single.toFixed(3)}</td>
       <td class="num">${r.pair.toFixed(3)}</td>
       <td class="num">${(sigmoid(r.rawScore) * 100).toFixed(1)}%</td>`;
