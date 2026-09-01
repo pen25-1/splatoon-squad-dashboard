@@ -199,7 +199,7 @@ footer p{margin:4px 0;}
   <section class="section">
     <div class="section-head">
       <h2>手持ち武器との相性ランキング</h2>
-      <span class="section-note">上の「手持ち」欄の選択と連動します(上位/下位5)</span>
+      <span class="section-note">上の「手持ち」欄の選択と連動します(手持ちの武器ごとに上位/下位5)</span>
     </div>
     <div id="compat-rank-body">
       <div class="empty-note">武器を1枠以上選んでください</div>
@@ -537,18 +537,6 @@ function renderCompatRanking() {
     el.innerHTML = '<div class="empty-note">\u6b66\u5668\u30921\u67a0\u4ee5\u4e0a\u9078\u3093\u3067\u304f\u3060\u3055\u3044</div>';
     return;
   }
-  const haveSet = new Set(have);
-  const scored = [];
-  for (let cand = 0; cand < N; cand++) {
-    if (haveSet.has(cand)) continue;
-    let s = 0;
-    for (const h of have) s += pairW(h, cand);
-    scored.push({ cand, s });
-  }
-  scored.sort((a, b) => b.s - a.s);
-  const top5 = scored.slice(0, 5);
-  const bottom5 = scored.slice(-5).reverse();
-  const haveNames = have.map(i => byId[i].name + tierTag(i)).join(' / ');
 
   function render(list) {
     return list.map(({ cand, s }) => {
@@ -558,18 +546,34 @@ function renderCompatRanking() {
     }).join('');
   }
 
-  el.innerHTML = `
-    <div class="section-note" style="margin-bottom:10px;">\u624b\u6301\u3061: ${haveNames}(\u624b\u6301\u3061\u304c\u8907\u6570\u306e\u5834\u5408\u306f\u5404\u6b66\u5668\u3068\u306e\u76f8\u6027\u306e\u5408\u8a08)</div>
-    <div class="pairs-grid">
-      <div>
-        <h3 style="font-size:.9rem;margin-bottom:8px;color:var(--good);">\u76f8\u6027\u304c\u826f\u3044\u6b66\u5668 TOP5</h3>
-        ${render(top5)}
-      </div>
-      <div>
-        <h3 style="font-size:.9rem;margin-bottom:8px;color:var(--bad);">\u76f8\u6027\u304c\u60aa\u3044\u6b66\u5668 WORST5</h3>
-        ${render(bottom5)}
+  // One ranking PER have weapon -- a combined/summed ranking hides which
+  // specific weapon likes which partner, which is the whole point here.
+  const blocks = have.map(h => {
+    const scored = [];
+    for (let cand = 0; cand < N; cand++) {
+      if (cand === h) continue;
+      scored.push({ cand, s: pairW(h, cand) });
+    }
+    scored.sort((a, b) => b.s - a.s);
+    const top5 = scored.slice(0, 5);
+    const bottom5 = scored.slice(-5).reverse();
+    return `
+    <div style="margin-bottom:22px;">
+      <div style="font-weight:700;margin-bottom:10px;">${byId[h].name}${tierTag(h)} \u3068\u306e\u76f8\u6027</div>
+      <div class="pairs-grid">
+        <div>
+          <h3 style="font-size:.85rem;margin-bottom:8px;color:var(--good);">\u826f\u3044 TOP5</h3>
+          ${render(top5)}
+        </div>
+        <div>
+          <h3 style="font-size:.85rem;margin-bottom:8px;color:var(--bad);">\u60aa\u3044 WORST5</h3>
+          ${render(bottom5)}
+        </div>
       </div>
     </div>`;
+  });
+
+  el.innerHTML = blocks.join('');
 }
 
 function onHaveChange() {
